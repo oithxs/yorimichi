@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Menu } from "lucide-react";
+import { Menu, Home, Settings } from "lucide-react";
 import Image from "next/image";
 import { UserButton, useUser, useClerk } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SidebarContent } from "@/components/sidebar/sidebar-content";
+import { ApiKeySettings } from "@/components/settings/api-key-settings";
 
 interface HeaderProps {
   title?: string;
@@ -100,7 +101,32 @@ export function Header({ title = "", className }: HeaderProps) {
                       userButtonPopoverCard: "shadow-xl",
                     }
                   }}
-                />
+                >
+                  <UserButton.MenuItems>
+                    <UserButton.Link
+                      label="ホーム"
+                      labelIcon={<Home className="h-4 w-4" />}
+                      href="/"
+                    />
+                    <UserButton.Action label="manageAccount" />
+                    <UserButton.Action label="signOut" />
+                  </UserButton.MenuItems>
+                  <UserButton.UserProfilePage
+                    label="Yorimichi 設定"
+                    url="yorimichi-settings"
+                    labelIcon={<Settings className="h-4 w-4" />}
+                  >
+                    <div className="p-8 space-y-6">
+                      <div>
+                        <h1 className="text-2xl font-bold">Yorimichi 設定</h1>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          AI機能を利用するためのAPIキーを設定します。
+                        </p>
+                      </div>
+                      <ApiKeySettings />
+                    </div>
+                  </UserButton.UserProfilePage>
+                </UserButton>
               </div>
             ) : (
               <Button

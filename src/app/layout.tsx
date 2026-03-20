@@ -35,6 +35,11 @@ export default function RootLayout({
           shimmer: false,
         },
       }}
+      localization={{
+        userButton: {
+          action__manageAccount: "設定",
+        },
+      }}
     >
       <html lang="ja" suppressHydrationWarning>
         <body
