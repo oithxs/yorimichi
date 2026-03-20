@@ -90,7 +90,10 @@ export function ChatComposer({
                     className="w-full resize-none border-none outline-none text-lg bg-transparent min-h-[56px] max-h-[200px] placeholder:text-gray-400 focus-visible:ring-0 shadow-none"
                     rows={1}
                     onKeyDown={(e) => {
-                        const isEnterSend = e.key === "Enter" && (!e.shiftKey || e.ctrlKey || e.metaKey);
+                        if (e.key !== "Enter") return;
+                        const isPlainEnter = !e.shiftKey && !e.ctrlKey && !e.metaKey;
+                        const isModifierEnter = !e.shiftKey && (e.ctrlKey || e.metaKey);
+                        const isEnterSend = isPlainEnter || isModifierEnter;
                         if (isEnterSend) {
                             e.preventDefault();
                             if (canSubmit) {
@@ -223,7 +226,7 @@ export function ChatComposer({
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent className="bg-black text-white border-transparent">
-                                    <p>送信 (Enter)</p>
+                                    <p>送信 (Enter / Ctrl/Cmd + Enter)</p>
                                 </TooltipContent>
                             </Tooltip>
                         )}
