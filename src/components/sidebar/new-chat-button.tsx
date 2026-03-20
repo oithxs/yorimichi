@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { SquarePen } from "lucide-react";
@@ -18,12 +19,25 @@ interface NewChatButtonProps {
 export function NewChatButton({ isExpanded, onClick }: NewChatButtonProps) {
   const router = useRouter();
 
-  const handleNewChat = () => {
+  const handleNewChat = useCallback(() => {
     // ルートへ移動
     router.push("/");
     // モバイルなどの場合はサイドバーを閉じる
     if (onClick) onClick();
-  };
+  }, [router, onClick]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const isNewChatShortcut = (event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === "o";
+      if (!isNewChatShortcut) return;
+
+      event.preventDefault();
+      handleNewChat();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handleNewChat]);
 
   return (
       <Tooltip>
@@ -51,7 +65,7 @@ export function NewChatButton({ isExpanded, onClick }: NewChatButtonProps) {
           </Button>
         </TooltipTrigger>
         <TooltipContent className="bg-black text-white border-transparent" side="right" sideOffset={10}>
-          <p>チャットを新規作成</p>
+          <p>チャットを新規作成 (Ctrl/Cmd + Shift + O)</p>
         </TooltipContent>
       </Tooltip>
   );

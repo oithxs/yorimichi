@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, Image as ImageIcon, Mic, Paperclip, Send, Square, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -90,7 +90,8 @@ export function ChatComposer({
                     className="w-full resize-none border-none outline-none text-lg bg-transparent min-h-[56px] max-h-[200px] placeholder:text-gray-400 focus-visible:ring-0 shadow-none"
                     rows={1}
                     onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
+                        const isEnterSend = e.key === "Enter" && (!e.shiftKey || e.ctrlKey || e.metaKey);
+                        if (isEnterSend) {
                             e.preventDefault();
                             if (canSubmit) {
                                 void onSubmit();
@@ -204,20 +205,27 @@ export function ChatComposer({
                                 <Square className="h-3.5 w-3.5 fill-current" />
                             </Button>
                         ) : (
-                            <Button
-                                onClick={() => {
-                                    if (canSubmit) {
-                                        void onSubmit();
-                                    }
-                                }}
-                                size="icon"
-                                className={`rounded-full transition-all ${canSubmit
-                                    ? "bg-blue-600 hover:bg-blue-700 text-white"
-                                    : "bg-gray-100 text-gray-400 hover:bg-gray-100 cursor-default"
-                                    }`}
-                            >
-                                <Send className="h-4 w-4 rotate-45 -translate-x-[1px]" />
-                            </Button>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        onClick={() => {
+                                            if (canSubmit) {
+                                                void onSubmit();
+                                            }
+                                        }}
+                                        size="icon"
+                                        className={`rounded-full transition-all ${canSubmit
+                                            ? "bg-blue-600 hover:bg-blue-700 text-white"
+                                            : "bg-gray-100 text-gray-400 hover:bg-gray-100 cursor-default"
+                                            }`}
+                                    >
+                                        <Send className="h-4 w-4 rotate-45 -translate-x-[1px]" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-black text-white border-transparent">
+                                    <p>送信 (Enter)</p>
+                                </TooltipContent>
+                            </Tooltip>
                         )}
                     </div>
                 </div>
