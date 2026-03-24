@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { EllipsisVertical, Pencil, Pin, Trash2 } from "lucide-react";
+import { EllipsisVertical, Pencil, Pin, Search, Trash2, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,6 +51,9 @@ export function ChatHistory({ onClickItem }: { onClickItem?: () => void }) {
   } | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [isUpdatingTitle, setIsUpdatingTitle] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const previousPathname = useRef(pathname);
   const { cache } = useSWRConfig();
   const key = isUserLoaded && user ? "/api/internal/chat/list" : null;
@@ -60,6 +63,29 @@ export function ChatHistory({ onClickItem }: { onClickItem?: () => void }) {
     revalidateOnMount: !hasCachedChats && !!key,
     revalidateIfStale: false,
   });
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.trim()) {
+        setIsSearching(true);
+        try {
+          const res = await fetch(`/api/internal/chat/search?q=${encodeURIComponent(searchQuery)}`);
+          if (res.ok) {
+            const data = await res.json();
+            setSearchResults(data);
+          }
+        } catch (error) {
+          console.error("Search failed:", error);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (previousPathname.current !== pathname) {
@@ -146,28 +172,61 @@ export function ChatHistory({ onClickItem }: { onClickItem?: () => void }) {
       <div className="pointer-events-none absolute top-0 left-0 right-0 z-10 h-8 bg-gradient-to-b from-[#E9EEF6] to-transparent" />
 
       <div className="h-full w-full min-w-0 box-border overflow-y-auto overscroll-contain hide-scrollbar px-4 pt-6 pb-4">
-        <div className="px-2 mb-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-          チャット履歴
+        <div className="px-2 mb-4">
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+            <Input
+              type="text"
+              placeholder="チャットを検索..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-10 w-full rounded-full bg-white/50 pl-9 pr-9 text-sm border-transparent transition-all focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-primary/20"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-0.5 hover:bg-muted text-muted-foreground transition-colors"
+                title="検索をクリア"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="px-2 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
+          <span>{searchQuery ? "検索結果" : "チャット履歴"}</span>
+          {isSearching && <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />}
         </div>
         <div className="flex w-full min-w-0 flex-col gap-1">
           {user ? (
-            chats.map((chat) => (
+            (searchQuery ? searchResults : chats).map((chat) => (
               <div
                 key={chat.chat_id}
                 className={cn(
-                  "grid h-10 w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)_auto] items-center rounded-full hover:bg-[#DDE3EA] group transition-colors",
+                  "grid h-auto min-h-[2.5rem] w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)_auto] items-center rounded-2xl hover:bg-[#DDE3EA] group transition-colors px-1 py-1",
                   pathname === `/chat/${chat.chat_id}` && "bg-[#DDE3EA]",
                 )}
               >
                 <Link
                   href={`/chat/${chat.chat_id}`}
                   onClick={onClickItem}
-                  className="flex h-10 min-w-0 max-w-full items-center pl-3 pr-1 overflow-hidden"
+                  className="flex h-full min-w-0 max-w-full items-center pl-3 pr-1 overflow-hidden"
                 >
-                  <div className="flex min-w-0 max-w-full flex-col items-start overflow-hidden w-full pr-2">
-                    <span className="truncate w-full text-left text-sm font-medium">
-                      {chat.chat_title}
-                    </span>
+                  <div className="flex min-w-0 max-w-full flex-col items-start overflow-hidden w-full pr-2 py-1">
+                    {searchQuery && chat.snippet ? (
+                      <>
+                        <span className="truncate w-full text-left text-sm font-medium">
+                          {chat.snippet}
+                        </span>
+                        <span className="truncate w-full text-left text-xs text-muted-foreground mt-0.5">
+                          {chat.chat_title}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="truncate w-full text-left text-sm font-medium">
+                        {chat.chat_title}
+                      </span>
+                    )}
                   </div>
                 </Link>
                 <DropdownMenu
