@@ -40,6 +40,7 @@ type ChatWindowProps = {
     fixedOffsetClassName?: string;
     showComposer?: boolean;
     flexLayout?: boolean;
+    scrollRequest?: { blockId: string; t: number };
     className?: string;
 };
 
@@ -59,6 +60,7 @@ export function ChatWindow({
     fixedOffsetClassName = "left-0 right-0 md:left-[72px]",
     showComposer = true,
     flexLayout = false,
+    scrollRequest,
     className,
 }: ChatWindowProps) {
     const [input, setInput] = useState("");
@@ -74,7 +76,12 @@ export function ChatWindow({
     const focusOnNextSentBlockRef = useRef(false);
     const streamingSessionBlockIdRef = useRef<string | null>(null);
     const isAutoFollowUnlockedRef = useRef(false);
+    const [lastScrollTimestamp, setLastScrollTimestamp] = useState<number>(0);
     const blocks = useChatStore((state) => state.chatData?.blocks ?? {});
+
+    useEffect(() => {
+        setLastScrollTimestamp(0);
+    }, [branchId]);
 
     const branchBlockCount = useMemo(
         () => Object.values(blocks).filter((block) => block.branch_id === branchId).length,
@@ -89,6 +96,13 @@ export function ChatWindow({
         // (Re-scroll when block count increases, e.g. after merge copies blocks)
         if (isSameBranch && !blockCountIncreased) return;
 
+        // Skip if targeting a block that hasn't been scrolled to yet
+        if (scrollRequest && scrollRequest.t > lastScrollTimestamp) {
+            initialFocusedBranchRef.current = branchId;
+            lastFocusedBlockCountRef.current = branchBlockCount;
+            return;
+        }
+
         const container = blockListRef.current;
         if (!container) return;
 
@@ -101,7 +115,22 @@ export function ChatWindow({
         latestBlock.scrollIntoView({ behavior: "auto", block: "start" });
         initialFocusedBranchRef.current = branchId;
         lastFocusedBlockCountRef.current = branchBlockCount;
-    }, [branchId, branchBlockCount]);
+    }, [branchId, branchBlockCount, scrollRequest, lastScrollTimestamp]);
+
+    useEffect(() => {
+        if (!scrollRequest || scrollRequest.t <= lastScrollTimestamp) return;
+
+        const container = blockListRef.current;
+        if (!container) return;
+
+        const targetBlock = container.querySelector<HTMLElement>(`[data-block-id="${scrollRequest.blockId}"]`);
+        if (targetBlock) {
+            requestAnimationFrame(() => {
+                targetBlock.scrollIntoView({ behavior: "auto", block: "start" });
+                setLastScrollTimestamp(scrollRequest.t);
+            });
+        }
+    }, [scrollRequest, branchBlockCount, lastScrollTimestamp]);
 
     useEffect(() => {
         if (!streamingBlock) {

@@ -72,7 +72,7 @@ export function ChatHistory({ onClickItem }: { onClickItem?: () => void }) {
           const res = await fetch(`/api/internal/chat/search?q=${encodeURIComponent(searchQuery)}`);
           if (res.ok) {
             const data = await res.json();
-            setSearchResults(data);
+            setSearchResults(data.results || []);
           }
         } catch (error) {
           console.error("Search failed:", error);
@@ -201,14 +201,14 @@ export function ChatHistory({ onClickItem }: { onClickItem?: () => void }) {
           {user ? (
             (searchQuery ? searchResults : chats).map((chat) => (
               <div
-                key={chat.chat_id}
+                key={searchQuery ? `${chat.chat_id}-${chat.block_id}` : chat.chat_id}
                 className={cn(
                   "grid h-auto min-h-[2.5rem] w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)_auto] items-center rounded-2xl hover:bg-[#DDE3EA] group transition-colors px-1 py-1",
                   pathname === `/chat/${chat.chat_id}` && "bg-[#DDE3EA]",
                 )}
               >
                 <Link
-                  href={`/chat/${chat.chat_id}`}
+                  href={searchQuery && chat.block_id ? `/chat/${chat.chat_id}#block-${chat.block_id}` : `/chat/${chat.chat_id}`}
                   onClick={onClickItem}
                   className="flex h-full min-w-0 max-w-full items-center pl-3 pr-1 overflow-hidden"
                 >

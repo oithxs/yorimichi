@@ -19,6 +19,41 @@ export default function ChatPage({ params }: ChatPageProps) {
   const [creationContext, setCreationContext] = useState<{ parentBlockId: string } | undefined>();
   const [branchContext, setBranchContext] = useState<any>(null);
   const [initialMessage, setInitialMessage] = useState<string | null>(null);
+  const [targetBlockId, setTargetBlockId] = useState<string | null>(null);
+  const [scrollRequest, setScrollRequest] = useState<{ blockId: string; t: number } | null>(null);
+
+  const isLoaded = !isLoading && !!chatData;
+
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (!chatData || !isLoaded) return;
+      const hash = window.location.hash;
+      if (hash.startsWith("#block-")) {
+        const blockId = hash.replace("#block-", "");
+        const block = chatData.blocks[blockId];
+        if (block) {
+          setTargetBlockId(blockId);
+          setScrollRequest({ blockId, t: Date.now() });
+          const branch = chatData.branches[block.branch_id];
+          if (branch && branch.depth > 0) {
+            setBranchContext(chatData.branches[branch.parent_branch_id!] || null);
+            setCreationContext({ parentBlockId: branch.parent_block_id! });
+          } else {
+            setCreationContext(undefined);
+            setBranchContext(null);
+          }
+        }
+      } else {
+        setTargetBlockId(null);
+        setScrollRequest(null);
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [chatData, isLoaded, id]);
 
   const parseError = (err: unknown) => {
     const fallbackMessage = "送信中にエラーが発生しました。";
@@ -182,6 +217,7 @@ export default function ChatPage({ params }: ChatPageProps) {
                 onInitialMessageHandled={() => setInitialMessage(null)}
                 onInitialSendError={handleInitialSendError}
                 onSwitchToSubBranch={handleSwitchToSub}
+                scrollRequest={scrollRequest || undefined}
               />
             ) : (
               <div className="h-full w-full">
@@ -194,6 +230,7 @@ export default function ChatPage({ params }: ChatPageProps) {
                   reload={handleReload}
                   onCloseAll={handleCloseSubBranch}
                   onBranch={handleSwitchToSub}
+                  scrollRequest={scrollRequest || undefined}
                 />
               </div>
             )

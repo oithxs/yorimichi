@@ -38,6 +38,7 @@ export interface ChatUIContainerProps {
   onBranch: (blockId: string) => void;
   chatData: ChatDetailResponse | null;
   isLoading: boolean;
+  scrollRequest?: { blockId: string; t: number };
 }
 
 type PaneConfig = {
@@ -150,9 +151,10 @@ interface ChatPaneHelperProps {
   onCreated: (newBranchId: string, message?: string) => void;
   mainBranchId: string;
   className?: string;
+  scrollRequest?: { blockId: string; t: number };
 }
 
-const ChatPaneHelper = ({ pane, onRemove, chatId, reload, onPaneConfigUpdate, onBranch, onCreated, mainBranchId, className }: ChatPaneHelperProps) => {
+const ChatPaneHelper = ({ pane, onRemove, chatId, reload, onPaneConfigUpdate, onBranch, onCreated, mainBranchId, className, scrollRequest }: ChatPaneHelperProps) => {
   const [streamingBlock, setStreamingBlock] = useState<StreamingBlock | null>(null);
   const chatData = useChatStore((state) => state.chatData);
   const removeBranch = useChatStore((state) => state.removeBranch);
@@ -368,6 +370,7 @@ const ChatPaneHelper = ({ pane, onRemove, chatId, reload, onPaneConfigUpdate, on
               onMerge={handleMerge}
               flexLayout={true}
               inputAlwaysBorder={false}
+              scrollRequest={scrollRequest}
             />
           </div>
         ) : pane.creationContext ? (
@@ -388,7 +391,7 @@ const ChatPaneHelper = ({ pane, onRemove, chatId, reload, onPaneConfigUpdate, on
 };
 
 // --- Main Container (統合版) ---
-export function ChatUIContainer({ chatId, mainBranchId, initialActiveBranchId, initialCreationContext, reload, onCloseAll, onBranch, chatData, isLoading }: ChatUIContainerProps) {
+export function ChatUIContainer({ chatId, mainBranchId, initialActiveBranchId, initialCreationContext, reload, onCloseAll, onBranch, chatData, isLoading, scrollRequest }: ChatUIContainerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const firstChatRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
@@ -555,6 +558,7 @@ export function ChatUIContainer({ chatId, mainBranchId, initialActiveBranchId, i
                 onBranch={handleBranch}
                 mainBranchId={mainBranchId}
                 onCreated={(newBranchId, message) => handleCreated(pane.id, newBranchId, message)}
+                scrollRequest={scrollRequest}
               />
             </div>
           ))}
@@ -584,6 +588,7 @@ export function ChatUIContainer({ chatId, mainBranchId, initialActiveBranchId, i
                     onBranch={handleBranch}
                     mainBranchId={mainBranchId}
                     onCreated={(newBranchId, message) => handleCreated(pane.id, newBranchId, message)}
+                    scrollRequest={scrollRequest}
                   />
                 </ResizablePanel>
                 {index < activePanes.length - 1 && <ResizableHandle className="bg-transparent w-2 after:w-px! after:bg-border/50!" />}

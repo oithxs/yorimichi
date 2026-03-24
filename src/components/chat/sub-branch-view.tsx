@@ -19,6 +19,7 @@ interface SubBranchViewProps {
     reload: () => Promise<void>;
     onCloseAll: () => void;
     onBranch: (blockId: string) => void;
+    scrollRequest?: { blockId: string; t: number };
 }
 
 export function SubBranchView({
@@ -28,7 +29,8 @@ export function SubBranchView({
     initialCreationContext,
     reload,
     onCloseAll,
-    onBranch
+    onBranch,
+    scrollRequest
 }: SubBranchViewProps) {
     const [panelState, setPanelState] = useState<"hidden-left" | "visible">("hidden-left");
 
@@ -65,6 +67,7 @@ export function SubBranchView({
                     onBranch={onBranch}
                     chatData={chatData}
                     isLoading={isLoading}
+                    scrollRequest={scrollRequest}
                 />
             </div>
         </div>

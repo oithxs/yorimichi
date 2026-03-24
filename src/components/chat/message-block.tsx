@@ -468,7 +468,7 @@ export function MessageBlock({ block, connector, onBranch, onMerge, onEdit, isSt
     };
 
     return (
-        <div data-message-block="true" className="flex w-full flex-col items-center scroll-mt-24">
+        <div data-message-block="true" data-block-id={block.block_id} className="flex w-full flex-col items-center scroll-mt-24">
             <div className={cn(
                 "relative z-10 w-full rounded-[24px] border border-gray-100 bg-white shadow-sm transition-all",
                 isCompact ? "max-w-full" : "max-w-3xl"

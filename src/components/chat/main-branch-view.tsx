@@ -17,6 +17,7 @@ type MainBranchViewProps = {
     initialMessage?: string | null;
     onInitialMessageHandled?: () => void;
     onInitialSendError?: (error: unknown) => void;
+    scrollRequest?: { blockId: string; t: number };
 };
 
 export function MainBranchView({
@@ -27,6 +28,7 @@ export function MainBranchView({
     initialMessage,
     onInitialMessageHandled,
     onInitialSendError,
+    scrollRequest,
 }: MainBranchViewProps) {
     const [streamingBlock, setStreamingBlock] = useState<StreamingBlock | null>(null);
     const [isInitialSending, setIsInitialSending] = useState(false);
@@ -173,6 +175,7 @@ export function MainBranchView({
                 fixedInput
                 fixedOffsetClassName="left-0 right-0 md:left-[72px]"
                 disclaimerText="AI は間違えることがあります。重要な情報は確認してください。"
+                scrollRequest={scrollRequest}
             />
         </section>
     );
