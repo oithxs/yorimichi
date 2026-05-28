@@ -1,0 +1,25 @@
+name: Monitor
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # 5分ごとに実行
+  workflow_dispatch:
+
+jobs:
+  check-uptime:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Service Status
+        id: status
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://yorimichi.h-x-s.dev/)
+          if [ "$response" -eq "200" ]; then
+            echo "status=up" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=down" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Notify Discord (if down) # 通知は後で導入
+        if: steps.status.outputs.status == 'down'
+        run: |
+          echo "サービス https://yorimichi.h-x-s.dev/ がダウンしています"
